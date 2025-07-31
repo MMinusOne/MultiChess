@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:v="clr-namespace:MultiChess.Views"
+                    xmlns:vm="clr-namespace:MultiChess.ViewModels">
+
+    <DataTemplate DataType="{x:Type vm:ChessViewModel}">
+        <v:ChessBoard />
+    </DataTemplate>
+
+</ResourceDictionary>
