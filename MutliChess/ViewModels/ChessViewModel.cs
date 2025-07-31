@@ -19,30 +19,30 @@ namespace MultiChess.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        int rows = 8; 
-        public int Rows
+        int _boardSize = 8;
+        public int BoardSize
         {
-            get { return rows; }
+            get { return _boardSize; }
             set
             {
-                if (rows != value)
+                if (_boardSize != value)
                 {
-                    rows = value;
-                    OnPropertyChanged(nameof(Rows));
+                     _boardSize = value;
+                    OnPropertyChanged(nameof(BoardSize));
                 }
             }
         }
 
-        int columns = 8;
-        public int Columns
+        int _boardFixedSize = 500;
+        public int BoardFixedSize
         {
-            get { return columns; }
+            get { return _boardFixedSize; }
             set
             {
-                if (columns != value)
+                if (_boardFixedSize != value)
                 {
-                    columns = value;
-                    OnPropertyChanged(nameof(Columns));
+                    _boardFixedSize = value;
+                    OnPropertyChanged(nameof(BoardFixedSize));
                 }
             }
         }
@@ -78,16 +78,52 @@ namespace MultiChess.ViewModels
 
         public void render()
         {
-            for(int x = 0; x < rows; x++)
+            for(int x = 0; x < this.BoardSize; x++)
             {
                 ObservableCollection<BoardCell> row = new ObservableCollection<BoardCell>();
-                for(int y = 0; y < columns; y++)
+                for(int y = 0; y < this.BoardSize; y++)
                 {
-                    BoardCell boardCell = new BoardCell();
+                    BoardCell boardCell = new BoardCell(x * BoardSize + y, new Piece());
                     row.Add(boardCell);
                 }
                 Board.Add(row);
             }
+
+            this.InitilizePieces();
+        }
+
+       void InitilizePieces()
+        {
+            var firstRow = this.Board.First();
+
+            firstRow[0].setPiece(new Piece(PIECE_TYPE.ROOK, PIECE_COLOR.WHITE));
+            firstRow[1].setPiece(new Piece(PIECE_TYPE.KNIGHT, PIECE_COLOR.WHITE));
+            firstRow[2].setPiece(new Piece(PIECE_TYPE.BISHOP, PIECE_COLOR.WHITE));
+            firstRow[3].setPiece(new Piece(PIECE_TYPE.KING, PIECE_COLOR.WHITE));
+            firstRow[4].setPiece(new Piece(PIECE_TYPE.QUEEN, PIECE_COLOR.WHITE));
+            firstRow[5].setPiece(new Piece(PIECE_TYPE.BISHOP, PIECE_COLOR.WHITE));
+            firstRow[6].setPiece(new Piece(PIECE_TYPE.KNIGHT, PIECE_COLOR.WHITE));
+            firstRow[7].setPiece(new Piece(PIECE_TYPE.ROOK, PIECE_COLOR.WHITE));
+            for(int i = 0; i < this.Board[1].Count; i++)
+            {
+                this.Board[1][i].setPiece(new Piece(PIECE_TYPE.PAWN, PIECE_COLOR.WHITE));
+            }
+
+            var lastRow = this.Board.Last();
+
+            lastRow[0].setPiece(new Piece(PIECE_TYPE.ROOK, PIECE_COLOR.BLACK));
+            lastRow[1].setPiece(new Piece(PIECE_TYPE.KNIGHT, PIECE_COLOR.BLACK));
+            lastRow[2].setPiece(new Piece(PIECE_TYPE.BISHOP, PIECE_COLOR.BLACK));
+            lastRow[3].setPiece(new Piece(PIECE_TYPE.KING, PIECE_COLOR.BLACK));
+            lastRow[4].setPiece(new Piece(PIECE_TYPE.QUEEN, PIECE_COLOR.BLACK));
+            lastRow[5].setPiece(new Piece(PIECE_TYPE.BISHOP, PIECE_COLOR.BLACK));
+            lastRow[6].setPiece(new Piece(PIECE_TYPE.KNIGHT, PIECE_COLOR.BLACK));
+            lastRow[7].setPiece(new Piece(PIECE_TYPE.ROOK, PIECE_COLOR.BLACK));
+            for (int i = 0; i < this.Board[this.Board.Count-2].Count; i++)
+            {
+                this.Board[this.Board.Count-2][i].setPiece(new Piece(PIECE_TYPE.PAWN, PIECE_COLOR.BLACK));
+            }
+
         }
 
         protected virtual void OnPropertyChanged(string propertyName)

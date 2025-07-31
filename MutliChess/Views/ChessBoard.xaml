@@ -5,10 +5,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:MultiChess.Views"
              xmlns:vm="clr-namespace:MultiChess.ViewModels"
+             xmlns:cnv="clr-namespace:MultiChess.Lib.Converters"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800"
+             d:DesignHeight="{Binding Source={x:Static vm:ChessViewModel.Instance}, Path=BoardFixedSize}" d:DesignWidth="{Binding Source={x:Static vm:ChessViewModel.Instance}, Path=BoardFixedSize}"
              >
-    <Grid Width="450" Height="450" Background="Red">
+    <UserControl.Resources>
+        <cnv:ParentSizeToPieceSizeConverter x:Key="ParentSizeToPieceSizeConverter"/>
+        <cnv:IndexToColorConverter x:Key="IndexToColorConverter"/>
+        <cnv:PieceEnumToImageConverter x:Key="PieceEnumToImageConverter"/>
+    </UserControl.Resources>
+    <Grid Width="{Binding Source={x:Static vm:ChessViewModel.Instance}, Path=BoardFixedSize, Mode=TwoWay}" Height="{Binding Source={x:Static vm:ChessViewModel.Instance}, Path=BoardFixedSize, Mode=TwoWay}">
         <ItemsControl ItemsSource="{Binding Source={x:Static vm:ChessViewModel.Instance}, Path=Board, Mode=TwoWay}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -27,8 +33,9 @@
 
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Width="56.25" Height="56.25" Background="Blue">
+                                <Grid Width="{Binding Source={x:Static vm:ChessViewModel.Instance}, Path=BoardFixedSize, Converter={StaticResource ParentSizeToPieceSizeConverter}}" Height="{Binding Source={x:Static vm:ChessViewModel.Instance}, Path=BoardFixedSize, Converter={StaticResource ParentSizeToPieceSizeConverter}}" Background="{Binding BoardIndex, Converter={StaticResource IndexToColorConverter}}">
                                     <Rectangle Stretch="Fill" Stroke="Black"/>
+                                    <Image Stretch="Fill" Source="{Binding ., Converter={StaticResource PieceEnumToImageConverter}}"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
