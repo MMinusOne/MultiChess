@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Static\chess_background.png" />
     <Resource Include="Static\MidnightSet\bB.png" />
     <Resource Include="Static\MidnightSet\bK.png" />

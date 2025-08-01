@@ -1,35 +1,101 @@
-﻿using System;
+﻿using MultiChess.ViewModels;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MultiChess.Lib
 {
-    public class BoardCell
+    public class BoardCell : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler? PropertyChanged;
+
         int _boardIndex;
         public int BoardIndex
         {
-            get { return _boardIndex; } 
-            set { _boardIndex = value; }
+            get { return _boardIndex; }
+            set { _boardIndex = value; OnPropertyChanged(nameof(BoardIndex)); }
         }
 
         Piece _piece;
         public Piece PIECE
         {
             get { return _piece; }
-            set { _piece = value; }
+            set { _piece = value; OnPropertyChanged(nameof(PIECE)); }
         }
+
+        bool _isCellSelected;
+        public bool IsCellSelected
+        {
+            get { return _isCellSelected; }
+            set
+            {
+                _isCellSelected = value;
+                OnPropertyChanged(nameof(IsCellSelected));
+            }
+        }
+
+        ObservableCollection<ObservableCollection<BoardCell>> board = ChessViewModel.Instance.Board;
 
         public BoardCell(int boardIndex, Piece newPiece)
         {
+            this.setPiece(newPiece);
+            IsCellSelected = false;
             BoardIndex = boardIndex;
         }
 
         public void setPiece(Piece newPiece)
         {
+            _piece = newPiece;
             PIECE = newPiece;
+        }
+
+        public void setCellSelected(bool state)
+        {
+            IsCellSelected = state;
+        }
+
+        public int Row;
+        public int Column;
+
+        public void RenderOnBoard()
+        {
+
+            if (ChessViewModel.Instance.InitialRender) return;
+
+            this.Column = BoardIndex% ChessViewModel.Instance.Board.Count;
+            this.Row = BoardIndex/ ChessViewModel.Instance.Board.Count;
+
+            ChessViewModel.Instance.Board[this.Row][this.Column] = null;
+            ChessViewModel.Instance.Board[this.Row][this.Column] = this;
+        }
+
+        bool _isAvailable = false;
+        public bool IsAvailable
+        {
+            get { return _isAvailable; }
+            set
+            {
+                _isAvailable = value;
+                OnPropertyChanged(nameof(IsAvailable));
+            }
+        }
+        public void setCellAvaiable(bool state)
+        {
+            IsAvailable = state;
+        }
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+
+            if (!ChessViewModel.Instance.InitialRender)
+            {
+                this.RenderOnBoard();
+            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

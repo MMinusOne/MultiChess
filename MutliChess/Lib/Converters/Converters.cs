@@ -35,11 +35,24 @@ namespace MultiChess.Lib.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is int)
+            if (value is BoardCell)
             {
-                double rowNumber = (int)value / 8;
+                var boardCell = (BoardCell)value;
+
+                if(boardCell.IsAvailable)
+                {
+                    return Brushes.Red;
+                }
+                if(boardCell.IsCellSelected)
+                {
+                    return Brushes.LightBlue;
+                }
+
+
+                var boardIndex = boardCell.BoardIndex;
+                double rowNumber = (int)boardIndex / 8;
                 bool isOddRow = rowNumber % 2 == 0;
-                var v = isOddRow ? (int)value + 1 : (int)value;
+                var v = isOddRow ? (int)boardIndex + 1 : (int)boardIndex;
                 if (v % 2 == 0)
                 {
                     return Brushes.Black;
@@ -73,11 +86,11 @@ namespace MultiChess.Lib.Converters
                 switch (cell.PIECE.PieceType)
                 {
                     case PIECE_TYPE.NULL_PIECE:
-                        return "";
+                        return null;
                     case PIECE_TYPE.PAWN:
                         return this.PiecePath("P", isBlack);
                     case PIECE_TYPE.KNIGHT:
-                        return this.PiecePath("K", isBlack);
+                        return this.PiecePath("N", isBlack);
                     case PIECE_TYPE.BISHOP:
                         return this.PiecePath("B", isBlack);
                     case PIECE_TYPE.ROOK:
