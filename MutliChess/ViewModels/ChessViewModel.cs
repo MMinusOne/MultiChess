@@ -59,7 +59,7 @@ namespace MultiChess.ViewModels
                     cell.setCellSelected(true);
                     SelectedCells.Add(cell);
 
-                    var availableSquaresTemp = GetAvailableSquares(cell);
+                    var availableSquaresTemp = cell.PIECE.GetAvailableSquares(cell);
                     for (int i = 0; i < availableSquaresTemp.Count; i++)
                     {
                         availableSquares.Add(availableSquaresTemp[i]);
@@ -68,6 +68,7 @@ namespace MultiChess.ViewModels
 
                     for (int i = 0; i <availableSquares.Count; i++)
                     {
+                        if (availableSquares[i] == null) continue;
                         availableSquares[i].setCellAvaiable(true);
                     }
 
@@ -113,7 +114,7 @@ namespace MultiChess.ViewModels
 
         }
 
-        ObservableCollection<ObservableCollection<BoardCell>> ColorBoardPerspective(PIECE_COLOR color)
+        public ObservableCollection<ObservableCollection<BoardCell>> ColorBoardPerspective(PIECE_COLOR color)
         {
             if (color == PIECE_COLOR.WHITE)
             {
@@ -137,7 +138,7 @@ namespace MultiChess.ViewModels
             }
         }
 
-        int OffsetPerspective(int n)
+        public int OffsetPerspective(int n)
         {
             if (SelectedCells[0].PIECE.PieceColor == PIECE_COLOR.WHITE)
             {
@@ -149,55 +150,14 @@ namespace MultiChess.ViewModels
             }
         }
 
-        BoardCell GetBoardAt(int x, int y)
+        public BoardCell GetBoardAt(int x, int y)
         {
             if (x >= this.BoardSize || 0 > x) return null;
-            if (y >= this.BoardSize || 0 > x) return null;
+            if (y >= this.BoardSize || 0 > y) return null;
             return this.Board[x][y];
         }
 
-        List<BoardCell> GetAvailableSquares(BoardCell cell)
-        {
-            var availableSquares = new List<BoardCell>();
 
-            switch (cell.PIECE.PieceType)
-            {
-                case PIECE_TYPE.NULL_PIECE:
-                    break;
-
-                case PIECE_TYPE.PAWN:
-                    var boardPerspective = ColorBoardPerspective(cell.PIECE.PieceColor);
-                    var nextCell = GetBoardAt(OffsetPerspective(1), cell.Column);
-                    if (nextCell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE)
-                    {
-                        availableSquares.Add(nextCell);
-                    }
-                    var nextSecondCell = GetBoardAt(OffsetPerspective(2), cell.Column);
-                    if (cell.PIECE.MovedOnce == false && nextSecondCell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE)
-                    {
-                        availableSquares.Add(nextSecondCell);
-                    }
-                    var sideRightCell = GetBoardAt(OffsetPerspective(1), cell.Column+1);
-                    var sideLeftCell = GetBoardAt(OffsetPerspective(1), cell.Column-1);
-
-                    if (sideRightCell.PIECE.PieceType != PIECE_TYPE.NULL_PIECE)
-                    {
-                        availableSquares.Add(sideRightCell);
-                    }
-
-                    if (sideLeftCell.PIECE.PieceType != PIECE_TYPE.NULL_PIECE)
-                    {
-                        availableSquares.Add(sideLeftCell);
-                    }
-
-
-
-                    break;
-
-            }
-
-            return availableSquares;
-        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
