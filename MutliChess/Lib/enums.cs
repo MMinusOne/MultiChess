@@ -20,6 +20,7 @@ namespace MultiChess.Lib
     public enum PIECE_COLOR
     {
         WHITE,
-        BLACK
+        BLACK,
+        NULL
     }
 }

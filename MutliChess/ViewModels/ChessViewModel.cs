@@ -39,7 +39,7 @@ namespace MultiChess.ViewModels
         }
 
         ObservableCollection<BoardCell> _selectedCells = new ObservableCollection<BoardCell>();
-        ObservableCollection<BoardCell> SelectedCells
+        public ObservableCollection<BoardCell> SelectedCells
         {
             get { return _selectedCells; }
             set { _selectedCells = value; OnPropertyChanged(nameof(SelectedCells)); }
@@ -59,7 +59,7 @@ namespace MultiChess.ViewModels
                     cell.setCellSelected(true);
                     SelectedCells.Add(cell);
 
-                    var availableSquaresTemp = cell.PIECE.GetAvailableSquares(cell);
+                    var availableSquaresTemp = cell.PIECE.GetAvailableSquares(cell, null);
                     for (int i = 0; i < availableSquaresTemp.Count; i++)
                     {
                         availableSquares.Add(availableSquaresTemp[i]);
@@ -150,6 +150,20 @@ namespace MultiChess.ViewModels
             }
         }
 
+        public int OffsetPerspective(int n, BoardCell relativeCell)
+        {
+            
+                if (relativeCell.PIECE.PieceColor == PIECE_COLOR.WHITE)
+                {
+                    return relativeCell.Row+n;
+                }
+                else
+                {
+                    return relativeCell.Row-n;
+                }
+            
+        }
+
         public BoardCell GetBoardAt(int x, int y)
         {
             if (x >= this.BoardSize || 0 > x) return null;
@@ -224,6 +238,8 @@ namespace MultiChess.ViewModels
                 for (int y = 0; y < this.BoardSize; y++)
                 {
                     BoardCell boardCell = new BoardCell(x * BoardSize + y, new Piece());
+                    boardCell.SetRow(x);
+                    boardCell.SetColumn(y);
                     row.Add(boardCell);
                 }
                 Board.Add(row);

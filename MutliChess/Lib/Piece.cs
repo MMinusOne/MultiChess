@@ -30,8 +30,9 @@ namespace MultiChess.Lib
 
         public Piece()
         {
-            _pieceType=PIECE_TYPE.NULL_PIECE;
+            this.PieceColor = PIECE_COLOR.NULL;
             this.PieceType = PIECE_TYPE.NULL_PIECE;
+
         }
         public Piece(PIECE_TYPE pieceType, PIECE_COLOR pieceColor)
         {
@@ -55,14 +56,14 @@ namespace MultiChess.Lib
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public List<BoardCell> GetAvailableSquares(BoardCell cell)
+        public List<BoardCell> GetAvailableSquares(BoardCell cell, BoardCell relativeCell)
         {
             var chessViewModel = ChessViewModel.Instance;
             var Board = chessViewModel.Board;
             var GetBoardAt = chessViewModel.GetBoardAt;
-            var OffsetPerspective = chessViewModel.OffsetPerspective;
             var ColorBoardPerspective = chessViewModel.ColorBoardPerspective;
 
+            if (relativeCell == null) relativeCell = ChessViewModel.Instance.SelectedCells[0];
 
             var availableSquares = new List<BoardCell>();
 
@@ -72,18 +73,18 @@ namespace MultiChess.Lib
             }
             else if (cell.PIECE.PieceType == PIECE_TYPE.PAWN)
             {
-                var nextCell = GetBoardAt(OffsetPerspective(1), cell.Column);
+                var nextCell = GetBoardAt(chessViewModel.OffsetPerspective(1, relativeCell), cell.Column);
                 if (nextCell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE)
                 {
                     availableSquares.Add(nextCell);
                 }
-                var nextSecondCell = GetBoardAt(OffsetPerspective(2), cell.Column);
+                var nextSecondCell = GetBoardAt(chessViewModel.OffsetPerspective(2, relativeCell), cell.Column);
                 if (cell.PIECE.MovedOnce == false && nextSecondCell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE)
                 {
                     availableSquares.Add(nextSecondCell);
                 }
-                var sideRightCell = GetBoardAt(OffsetPerspective(1), cell.Column+1);
-                var sideLeftCell = GetBoardAt(OffsetPerspective(1), cell.Column-1);
+                var sideRightCell = GetBoardAt(chessViewModel.OffsetPerspective(1, relativeCell), cell.Column+1);
+                var sideLeftCell = GetBoardAt(chessViewModel.OffsetPerspective(1, relativeCell), cell.Column-1);
                 if (sideRightCell != null && sideRightCell.PIECE.PieceColor != cell.PIECE.PieceColor)
                 {
                     if (sideRightCell.PIECE.PieceType != PIECE_TYPE.NULL_PIECE)
@@ -100,21 +101,20 @@ namespace MultiChess.Lib
                     }
                 }
             }
-            else
-                if (cell.PIECE.PieceType == PIECE_TYPE.KNIGHT)
+            else if (cell.PIECE.PieceType == PIECE_TYPE.KNIGHT)
             {
                 var boardPerspective = ColorBoardPerspective(cell.PIECE.PieceColor);
 
                 List<BoardCell> cells = new List<BoardCell>
                     {
-                GetBoardAt(OffsetPerspective(2), cell.Column-1),
-                GetBoardAt(OffsetPerspective(1), cell.Column-2),
-                GetBoardAt(OffsetPerspective(2), cell.Column+1),
-                GetBoardAt(OffsetPerspective(1), cell.Column+2),
-                GetBoardAt(OffsetPerspective(-2), cell.Column-1),
-                GetBoardAt(OffsetPerspective(-1), cell.Column-2),
-                GetBoardAt(OffsetPerspective(-2), cell.Column+1),
-                GetBoardAt(OffsetPerspective(-1), cell.Column+2),
+                GetBoardAt(chessViewModel.OffsetPerspective(2, relativeCell), cell.Column-1),
+                GetBoardAt(chessViewModel.OffsetPerspective(1, relativeCell), cell.Column-2),
+                GetBoardAt(chessViewModel.OffsetPerspective(2, relativeCell), cell.Column+1),
+                GetBoardAt(chessViewModel.OffsetPerspective(1, relativeCell), cell.Column+2),
+                GetBoardAt(chessViewModel.OffsetPerspective(-2, relativeCell), cell.Column-1),
+                GetBoardAt(chessViewModel.OffsetPerspective(-1, relativeCell), cell.Column-2),
+                GetBoardAt(chessViewModel.OffsetPerspective(-2, relativeCell), cell.Column+1),
+                GetBoardAt(chessViewModel.OffsetPerspective(-1, relativeCell), cell.Column+2),
                 };
 
                 for (int i = 0; i < cells.Count; i++)
@@ -126,7 +126,6 @@ namespace MultiChess.Lib
                     }
                 }
             }
-
             else if (cell.PIECE.PieceType == PIECE_TYPE.BISHOP)
             {
                 var directions = new (int dx, int dy)[] {
@@ -267,36 +266,79 @@ namespace MultiChess.Lib
             {
                 List<BoardCell> cells = new List<BoardCell>
                     {
-                GetBoardAt(OffsetPerspective(1), cell.Column-1),
-                GetBoardAt(OffsetPerspective(1), cell.Column),
-                GetBoardAt(OffsetPerspective(1), cell.Column+1),
-                GetBoardAt(OffsetPerspective(0), cell.Column+1),
-                GetBoardAt(OffsetPerspective(0), cell.Column-1),
-                GetBoardAt(OffsetPerspective(-1), cell.Column-1),
-                GetBoardAt(OffsetPerspective(-1), cell.Column),
-                GetBoardAt(OffsetPerspective(-1), cell.Column+1),
+                GetBoardAt(chessViewModel.OffsetPerspective(1, relativeCell), cell.Column-1),
+                GetBoardAt(chessViewModel.OffsetPerspective(1, relativeCell), cell.Column),
+                GetBoardAt(chessViewModel.OffsetPerspective(1, relativeCell), cell.Column+1),
+                GetBoardAt(chessViewModel.OffsetPerspective(0, relativeCell), cell.Column+1),
+                GetBoardAt(chessViewModel.OffsetPerspective(0, relativeCell), cell.Column-1),
+                GetBoardAt(chessViewModel.OffsetPerspective(-1, relativeCell), cell.Column-1),
+                GetBoardAt(chessViewModel.OffsetPerspective(-1, relativeCell), cell.Column),
+                GetBoardAt(chessViewModel.OffsetPerspective(-1, relativeCell), cell.Column+1),
                 };
+
+                List<BoardCell> allOppositeAvailableSquares = new List<BoardCell>();
+
+
+                for (int x = 0; x < Board.Count; x++)
+                {
+                    for (int y = 0; y < Board[x].Count; y++)
+                    {
+                        var oppositePiece = GetBoardAt(x, y);
+                        if (oppositePiece == null) continue;
+                        if (oppositePiece.PIECE.PieceColor == cell.PIECE.PieceColor) continue;
+                        if (oppositePiece.PIECE.PieceType == PIECE_TYPE.KING) continue;
+                        if (oppositePiece.PIECE.PieceType == PIECE_TYPE.PAWN)
+                        {
+                            var sideRightPiece = GetBoardAt(oppositePiece.PIECE.PieceColor == PIECE_COLOR.WHITE ? oppositePiece.Row+1 : oppositePiece.Row-1, oppositePiece.Column-1);
+                            var sideLeftPiece = GetBoardAt(oppositePiece.PIECE.PieceColor == PIECE_COLOR.WHITE ? oppositePiece.Row+1 : oppositePiece.Row-1, oppositePiece.Column+1);
+                            if (sideRightPiece != null) allOppositeAvailableSquares.Add(sideRightPiece);
+                            if (sideLeftPiece != null) allOppositeAvailableSquares.Add(sideLeftPiece);
+                            continue;
+                        }
+                        ;
+
+                        if (oppositePiece.PIECE.PieceType == PIECE_TYPE.NULL_PIECE) continue;
+
+                        var avSquaresInversed = oppositePiece.PIECE.GetAvailableSquares(oppositePiece, oppositePiece);
+
+                        for (int z = 0; z < avSquaresInversed.Count; z++)
+                        {
+                            allOppositeAvailableSquares.Add(avSquaresInversed[z]);
+                        }
+                    }
+                }
 
                 for (int i = 0; i < cells.Count; i++)
                 {
                     if (cells[i] == null) continue;
-                    if (cells[i].PIECE.PieceType == PIECE_TYPE.NULL_PIECE || cells[i].PIECE.PieceColor !=  cell.PIECE.PieceColor)
+                    if (IsKingInCheck(cells[i], allOppositeAvailableSquares)) continue;
+                    if (
+                        cells[i].PIECE.PieceType == PIECE_TYPE.NULL_PIECE ||
+                        cells[i].PIECE.PieceColor != cell.PIECE.PieceColor)
                     {
-                        var oppositeAvailableSquares = cells[i].PIECE.GetAvailableSquares(cells[i]);
-                        bool valid = true;
-                        for (int j = 0; j < oppositeAvailableSquares.Count; j++)
-                        {
-                            if (oppositeAvailableSquares[j].Column != cell.Row && oppositeAvailableSquares[j].Row != cell.Column)
-                            {
-                                valid = false;
-                            }
-                        }
-                        if (valid) availableSquares.Add(cells[i]);
+                        availableSquares.Add(cells[i]);
                     }
                 }
             }
 
             return availableSquares;
         }
+
+        public bool IsKingInCheck(BoardCell cell, List<BoardCell> allOppositeAvailableSquares)
+        {
+            bool kingChecked = false;
+
+            for (int i = 0; i < allOppositeAvailableSquares.Count; i++)
+            {
+                if (allOppositeAvailableSquares[i].BoardIndex == cell.BoardIndex)
+                {
+                    kingChecked = true;
+                }
+
+            }
+
+            return kingChecked;
+        }
     }
+
 }

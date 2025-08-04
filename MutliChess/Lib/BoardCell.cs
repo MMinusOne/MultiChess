@@ -61,6 +61,16 @@ namespace MultiChess.Lib
         public int Row;
         public int Column;
 
+        public void SetRow(int row)
+        {
+            Row = row;
+        }
+
+        public void SetColumn(int column)
+        {
+            Column = column;
+        }
+
         public void RenderOnBoard()
         {
 
