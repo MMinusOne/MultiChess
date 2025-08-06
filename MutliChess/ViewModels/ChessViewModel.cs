@@ -63,8 +63,7 @@ namespace MultiChess.ViewModels
                     for (int i = 0; i < availableSquaresTemp.Count; i++)
                     {
                         availableSquares.Add(availableSquaresTemp[i]);
-                    }
-                    ;
+                    };
 
                     for (int i = 0; i <availableSquares.Count; i++)
                     {
@@ -95,6 +94,10 @@ namespace MultiChess.ViewModels
                     {
                         var piece = fromCell.PIECE;
                         toCell.setPiece(piece);
+                        if((toCell.Row == 0 || toCell.Row == Board.Count-1) && fromCell.PIECE.PieceType == PIECE_TYPE.PAWN)
+                        {
+                            toCell.setPiece(new Piece(PIECE_TYPE.QUEEN, fromCell.PIECE.PieceColor));
+                        }
                         fromCell.setPiece(new Piece());
                         piece.MovedOnce = true;
                     }
