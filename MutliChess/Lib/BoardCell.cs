@@ -47,6 +47,14 @@ namespace MultiChess.Lib
             BoardIndex = boardIndex;
         }
 
+        public BoardCell(int boardIndex, Piece newPiece, ObservableCollection<ObservableCollection<BoardCell>> board)
+        {
+            this.setPiece(newPiece);
+            IsCellSelected = false;
+            BoardIndex = boardIndex;
+            this.board = board;
+        }
+
         public void setPiece(Piece newPiece)
         {
             _piece = newPiece;
@@ -76,11 +84,11 @@ namespace MultiChess.Lib
 
             if (ChessViewModel.Instance.InitialRender) return;
 
-            this.Column = BoardIndex% ChessViewModel.Instance.Board.Count;
-            this.Row = BoardIndex/ ChessViewModel.Instance.Board.Count;
+            this.Column = BoardIndex% this.board.Count;
+            this.Row = BoardIndex/ this.board.Count;
 
-            ChessViewModel.Instance.Board[this.Row][this.Column] = null;
-            ChessViewModel.Instance.Board[this.Row][this.Column] = this;
+            this.board[this.Row][this.Column] = null;
+            this.board[this.Row][this.Column] = this;
         }
 
         bool _isAvailable = false;

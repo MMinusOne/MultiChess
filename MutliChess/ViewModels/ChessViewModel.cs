@@ -46,6 +46,12 @@ namespace MultiChess.ViewModels
         }
 
 
+        PIECE_COLOR turn = PIECE_COLOR.WHITE;
+        void ChangeTurn()
+        {
+            turn = turn == PIECE_COLOR.WHITE ? PIECE_COLOR.BLACK : PIECE_COLOR.WHITE;
+        }
+
         ObservableCollection<BoardCell> availableSquares = new ObservableCollection<BoardCell>();
         public void SelectCellExecute(object obj)
         {
@@ -55,15 +61,16 @@ namespace MultiChess.ViewModels
             switch (SelectedCells.Count)
             {
                 case 0:
-                    if (cell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE) return;
+                    if (cell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE || cell.PIECE.PieceColor != turn) return;
                     cell.setCellSelected(true);
                     SelectedCells.Add(cell);
 
-                    var availableSquaresTemp = cell.PIECE.GetAvailableSquares(cell, null);
+                    var availableSquaresTemp = cell.PIECE.GetAvailableSquares(cell, null, true);
                     for (int i = 0; i < availableSquaresTemp.Count; i++)
                     {
                         availableSquares.Add(availableSquaresTemp[i]);
-                    };
+                    }
+                    ;
 
                     for (int i = 0; i <availableSquares.Count; i++)
                     {
@@ -94,27 +101,62 @@ namespace MultiChess.ViewModels
                     {
                         var piece = fromCell.PIECE;
                         toCell.setPiece(piece);
-                        if((toCell.Row == 0 || toCell.Row == Board.Count-1) && fromCell.PIECE.PieceType == PIECE_TYPE.PAWN)
+                        if (fromCell.PIECE.PieceType == PIECE_TYPE.PAWN && (toCell.Row == 0 || toCell.Row == Board.Count-1))
                         {
                             toCell.setPiece(new Piece(PIECE_TYPE.QUEEN, fromCell.PIECE.PieceColor));
                         }
+
+                        if (piece.PieceType == PIECE_TYPE.KING && Math.Abs(fromCell.Column - toCell.Column) >= 2)
+                        {
+                            if ((fromCell.Column - toCell.Column) > 0)
+                            {
+                                var rookCell = GetBoardAt(fromCell.Row, 0);
+                                if (rookCell.PIECE.PieceType == PIECE_TYPE.ROOK)
+                                {
+                                    rookCell.setPiece(new Piece());
+                                    var nextToKing = GetBoardAt(fromCell.Row, fromCell.Column-1);
+                                    nextToKing.setPiece(new Piece(PIECE_TYPE.ROOK, piece.PieceColor));
+                                }
+                            }
+
+                            if ((fromCell.Column - toCell.Column) < 0)
+                            {
+                                var rookCell = GetBoardAt(fromCell.Row, Board.Count-1);
+                                if (rookCell.PIECE.PieceType == PIECE_TYPE.ROOK)
+                                {
+                                    rookCell.setPiece(new Piece());
+                                    var nextToKing = GetBoardAt(fromCell.Row, fromCell.Column+1);
+                                    nextToKing.setPiece(new Piece(PIECE_TYPE.ROOK, piece.PieceColor));
+                                }
+                            }
+                        }
+                        ;
+
                         fromCell.setPiece(new Piece());
                         piece.MovedOnce = true;
+
+                        toCell.setCellSelected(false);
+                        fromCell.setCellSelected(false);
+
+
+                        SelectedCells.Clear();
+                        for (int i = 0; i < availableSquares.Count; i++)
+                        {
+                            availableSquares[i].setCellAvaiable(false);
+                        }
+                        availableSquares.Clear();
+                        this.ChangeTurn();
+
                     }
-                    toCell.setCellSelected(false);
-                    fromCell.setCellSelected(false);
-
-
-                    SelectedCells.Clear();
-                    for (int i = 0; i < availableSquares.Count; i++)
-                    {
-                        availableSquares[i].setCellAvaiable(false);
-                    }
-                    availableSquares.Clear();
-
                     break;
-            }
 
+            }
+        }
+
+
+        public void CheckmateHappened(PIECE_COLOR color)
+        {
+            Console.WriteLine("hi");
         }
 
         public ObservableCollection<ObservableCollection<BoardCell>> ColorBoardPerspective(PIECE_COLOR color)
@@ -155,16 +197,16 @@ namespace MultiChess.ViewModels
 
         public int OffsetPerspective(int n, BoardCell relativeCell)
         {
-            
-                if (relativeCell.PIECE.PieceColor == PIECE_COLOR.WHITE)
-                {
-                    return relativeCell.Row+n;
-                }
-                else
-                {
-                    return relativeCell.Row-n;
-                }
-            
+
+            if (relativeCell.PIECE.PieceColor == PIECE_COLOR.WHITE)
+            {
+                return relativeCell.Row+n;
+            }
+            else
+            {
+                return relativeCell.Row-n;
+            }
+
         }
 
         public BoardCell GetBoardAt(int x, int y)
@@ -174,6 +216,12 @@ namespace MultiChess.ViewModels
             return this.Board[x][y];
         }
 
+        public BoardCell GetBoardAt(int x, int y, ObservableCollection<ObservableCollection<BoardCell>> board)
+        {
+            if (x >=  board.Count || 0 > x) return null;
+            if (y >= board.Count || 0 > y) return null;
+            return board[x][y];
+        }
 
 
         public event PropertyChangedEventHandler PropertyChanged;
