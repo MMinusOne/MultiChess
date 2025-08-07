@@ -80,11 +80,34 @@ namespace MultiChess.ViewModels
 
                     break;
                 case 1:
+                    bool valid = false;
+                    if (SelectedCells[0].BoardIndex == cell.BoardIndex)
+                    {
+                        SelectedCells[0].setCellSelected(false);
+                        for(int i = 0; i <availableSquares.Count; i++)
+                        {
+                            availableSquares[i].setCellAvaiable(false);
+                        }
+                        availableSquares.Clear();
+                        SelectedCells.Clear();
+                        break;
+                    }
+                    for (int i = 0; i < availableSquares.Count; i++)
+                    {
+                        if (availableSquares[i].BoardIndex == cell.BoardIndex) valid = true;
+                    }
+                    if (!valid) break;
                     cell.setCellSelected(true);
                     SelectedCells.Add(cell);
 
                     var toCell = SelectedCells[1];
                     var fromCell = SelectedCells[0];
+
+                    if (fromCell.BoardIndex == cell.BoardIndex)
+                    {
+                        SelectedCells.Clear();
+                        break;
+                    }
                     bool canMove = false;
 
                     for (int i = 0; i < availableSquares.Count; i++)
