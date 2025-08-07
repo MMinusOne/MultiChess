@@ -19,9 +19,12 @@ namespace MultiChess.ViewModels
             set { _initialRender = value; OnPropertyChanged(nameof(InitialRender)); }
         }
 
+        MultiplayerManager multiplayerManager;
+
         public ChessViewModel()
         {
             _instance = this;
+            multiplayerManager = MultiplayerManager.Instance;
             this.render();
         }
 
@@ -179,7 +182,6 @@ namespace MultiChess.ViewModels
 
         public void CheckmateHappened(PIECE_COLOR color)
         {
-            Console.WriteLine("hi");
         }
 
         public ObservableCollection<ObservableCollection<BoardCell>> ColorBoardPerspective(PIECE_COLOR color)

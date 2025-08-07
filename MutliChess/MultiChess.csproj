@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Static\chess_background.png" />
+    <None Remove="Staticchess_background.png" />
     <None Remove="Static\MidnightSet\bB.png" />
     <None Remove="Static\MidnightSet\bK.png" />
     <None Remove="Static\MidnightSet\bN.png" />
@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
+    <PackageReference Include="SocketIoClientDotNet" Version="0.9.13" />
   </ItemGroup>
 
   <ItemGroup>

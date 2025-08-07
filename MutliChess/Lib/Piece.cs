@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Documents;
@@ -56,7 +57,7 @@ namespace MultiChess.Lib
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public List<AvailableSquareCollection> GetAllOppositeAvailableSquares(PIECE_COLOR originColor, ObservableCollection<ObservableCollection<BoardCell>> board = null)
+        public List<AvailableSquareCollection> GetAllOppositeAvailableSquares(PIECE_COLOR originColor, ObservableCollection<ObservableCollection<BoardCell>> board = null, bool forKing = false, bool checkPinned = true)
         {
             List<AvailableSquareCollection> allOppositeAvailableSquares = new List<AvailableSquareCollection>();
             var chessViewModel = ChessViewModel.Instance;
@@ -91,7 +92,7 @@ namespace MultiChess.Lib
 
                     if (oppositePiece.PIECE.PieceType == PIECE_TYPE.NULL_PIECE) continue;
 
-                    var avSquaresInversed = oppositePiece.PIECE.GetAvailableSquares(oppositePiece, oppositePiece, false, true);
+                    var avSquaresInversed = oppositePiece.PIECE.GetAvailableSquares(oppositePiece, oppositePiece, false, forKing, checkPinned);
                     var squaresCollection = new AvailableSquareCollection();
                     squaresCollection.SetOriginator(oppositePiece);
                     for (int z = 0; z < avSquaresInversed.Count; z++)
@@ -105,7 +106,7 @@ namespace MultiChess.Lib
             return allOppositeAvailableSquares;
         }
 
-        public List<BoardCell> GetAvailableSquares(BoardCell cell, BoardCell relativeCell, bool checkCheck = false, bool fromGetOpposite = false)
+        public List<BoardCell> GetAvailableSquares(BoardCell cell, BoardCell relativeCell, bool checkCheck = false, bool fromGetOpposite = false, bool pinCheck = true)
         {
             var chessViewModel = ChessViewModel.Instance;
             ObservableCollection<ObservableCollection<BoardCell>> Board = chessViewModel.Board;
@@ -121,7 +122,7 @@ namespace MultiChess.Lib
 
             if (checkCheck)
             {
-                allOppositeAvailableSquares = GetAllOppositeAvailableSquares(cell.PIECE.PieceColor);
+                allOppositeAvailableSquares = GetAllOppositeAvailableSquares(cell.PIECE.PieceColor, null, false);
                 kingCell = FindKing(cell.PIECE.PieceColor);
 
             }
@@ -149,16 +150,17 @@ namespace MultiChess.Lib
                 {
                     availableSquares.Add(nextCell);
                 }
-                else if (nextCell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE && inCheck && isValidCheckCell(nextCell, cell, piecesChecking, kingCell))
+                else if (nextCell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE && inCheck && GetPiecesCheckingWithMutation(cell, nextCell).Count == 0)
                 {
                     availableSquares.Add(nextCell);
                 }
+
                 var nextSecondCell = chessViewModel.GetBoardAt(chessViewModel.OffsetPerspective(2, relativeCell), cell.Column);
-                if (cell.PIECE.MovedOnce == false && nextSecondCell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE  && !inCheck)
+                if (cell.PIECE.MovedOnce == false && nextSecondCell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE  && !inCheck && nextCell.PIECE.PieceType==PIECE_TYPE.NULL_PIECE)
                 {
                     availableSquares.Add(nextSecondCell);
                 }
-                else if (inCheck && cell.PIECE.MovedOnce == false && nextSecondCell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE && isValidCheckCell(nextSecondCell, cell, piecesChecking, kingCell))
+                else if (inCheck && cell.PIECE.MovedOnce == false && nextSecondCell.PIECE.PieceType == PIECE_TYPE.NULL_PIECE && GetPiecesCheckingWithMutation(cell, nextSecondCell).Count == 0)
                 {
                     availableSquares.Add(nextSecondCell);
                 }
@@ -171,7 +173,7 @@ namespace MultiChess.Lib
                     {
                         availableSquares.Add(sideRightCell);
                     }
-                    else if (inCheck && isValidCheckCell(sideRightCell, cell, piecesChecking, kingCell) && sideRightCell.PIECE.PieceType != PIECE_TYPE.NULL_PIECE)
+                    else if (inCheck && GetPiecesCheckingWithMutation(cell, sideRightCell).Count == 0 && sideRightCell.PIECE.PieceType != PIECE_TYPE.NULL_PIECE)
                     {
 
                         availableSquares.Add(sideRightCell);
@@ -186,7 +188,7 @@ namespace MultiChess.Lib
                     {
                         availableSquares.Add(sideLeftCell);
                     }
-                    else if (inCheck && isValidCheckCell(sideLeftCell, cell, piecesChecking, kingCell) && sideLeftCell.PIECE.PieceType != PIECE_TYPE.NULL_PIECE)
+                    else if (inCheck && GetPiecesCheckingWithMutation(cell, sideLeftCell).Count == 0 && sideLeftCell.PIECE.PieceType != PIECE_TYPE.NULL_PIECE)
                     {
                         availableSquares.Add(sideLeftCell);
 
@@ -216,21 +218,12 @@ namespace MultiChess.Lib
                     {
                         if (!inCheck)
                         {
-                            if (checkCheck && GetPiecesCheckingWithMutation(cell, cells[i]).Count == 0)
-                            {
-                                availableSquares.Add(cells[i]);
-                            }
-                            else
-                            {
-                                availableSquares.Add(cells[i]);
-                            }
+
+                            availableSquares.Add(cells[i]);
                         }
-                        else if (inCheck)
+                        else if (inCheck && GetPiecesCheckingWithMutation(cell, cells[i]).Count == 0)
                         {
-                            if (isValidCheckCell(cells[i], cell, piecesChecking, kingCell))
-                            {
-                                availableSquares.Add(cells[i]);
-                            }
+                            availableSquares.Add(cells[i]);
                         }
                     }
                     else if (cells[i].PIECE.PieceColor == cell.PIECE.PieceColor && fromGetOpposite)
@@ -267,7 +260,7 @@ namespace MultiChess.Lib
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
-                                else if (inCheck && isValidCheckCell(Board[newX][newY], cell, piecesChecking, kingCell))
+                                else if (inCheck && GetPiecesCheckingWithMutation(cell, Board[newX][newY]).Count == 0)
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
@@ -278,7 +271,7 @@ namespace MultiChess.Lib
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
-                                else if (inCheck && isValidCheckCell(Board[newX][newY], cell, piecesChecking, kingCell))
+                                else if (inCheck && GetPiecesCheckingWithMutation(cell, Board[newX][newY]).Count == 0)
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
@@ -329,7 +322,7 @@ namespace MultiChess.Lib
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
-                                else if (inCheck && isValidCheckCell(Board[newX][newY], cell, piecesChecking, kingCell))
+                                else if (inCheck && GetPiecesCheckingWithMutation(cell, Board[newX][newY]).Count == 0)
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
@@ -340,7 +333,7 @@ namespace MultiChess.Lib
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
-                                else if (inCheck && isValidCheckCell(Board[newX][newY], cell, piecesChecking, kingCell))
+                                else if (inCheck && GetPiecesCheckingWithMutation(cell, Board[newX][newY]).Count == 0)
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
@@ -395,7 +388,7 @@ namespace MultiChess.Lib
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
-                                else if (inCheck && isValidCheckCell(Board[newX][newY], cell, piecesChecking, kingCell))
+                                else if (inCheck && GetPiecesCheckingWithMutation(cell, Board[newX][newY]).Count == 0)
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
@@ -406,7 +399,7 @@ namespace MultiChess.Lib
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
-                                else if (inCheck && isValidCheckCell(Board[newX][newY], cell, piecesChecking, kingCell))
+                                else if (inCheck && GetPiecesCheckingWithMutation(cell, Board[newX][newY]).Count == 0)
                                 {
                                     availableSquares.Add(Board[newX][newY]);
                                 }
@@ -446,6 +439,7 @@ namespace MultiChess.Lib
 
                 if (!cell.PIECE.MovedOnce)
                 {
+                    //var allOppositeSquares = GetAllOppositeAvailableSquares(cell.PIECE.PieceColor, null, false, false);
                     if (
                         Board[cell.Row][cell.Column+1].PIECE.PieceType == PIECE_TYPE.NULL_PIECE
                         &&
@@ -456,6 +450,7 @@ namespace MultiChess.Lib
                         !inCheck
                         )
                     {
+
                         availableSquares.Add(Board[cell.Row][cell.Column+2]);
                     }
 
@@ -474,6 +469,7 @@ namespace MultiChess.Lib
                 for (int i = 0; i < cells.Count; i++)
                 {
                     if (cells[i] == null) continue;
+                    if (inCheck) allOppositeAvailableSquares = GetAllOppositeAvailableSquares(cell.PIECE.PieceColor, null, true);
                     var futurePieceChecking = GetPiecesChecking(cells[i], allOppositeAvailableSquares);
                     if (futurePieceChecking.Count != 0) continue;
                     if (
@@ -487,6 +483,21 @@ namespace MultiChess.Lib
                         if (fromGetOpposite) availableSquares.Add(cells[i]);
                     }
                 }
+            }
+
+            if (checkCheck)
+            {
+                List<BoardCell> availableSquaresFiltered = new List<BoardCell>();
+                foreach (var availableSquare in availableSquares)
+                {
+                    var peacesChecking = GetPiecesCheckingWithMutation(cell, availableSquare, false);
+                    if (peacesChecking.Count == 0)
+                    {
+                        availableSquaresFiltered.Add(availableSquare);
+                    }
+                }
+
+                availableSquares = availableSquaresFiltered;
             }
 
             return availableSquares;
@@ -513,76 +524,22 @@ namespace MultiChess.Lib
             return kingCell;
         }
 
-        public List<BoardCell> GetPiecesCheckingWithMutation(BoardCell originalCell, BoardCell destinationCell)
+        public List<BoardCell> GetPiecesCheckingWithMutation(BoardCell originalCell, BoardCell destinationCell, bool forKing = false)
         {
-            var board = ChessViewModel.Instance.Board;
+            var Board = ChessViewModel.Instance.Board;
             var originalPieceTemp = originalCell.PIECE;
             var destinationPieceTemp = destinationCell.PIECE;
-            var kingCell = FindKing(originalCell.PIECE.PieceColor);
+            Board[destinationCell.Row][destinationCell.Column].setPiece(originalPieceTemp);
+            Board[originalCell.Row][originalCell.Column].setPiece(destinationPieceTemp);
+            var kingCell = FindKing(originalPieceTemp.PieceColor);
 
-            board[destinationCell.Row][destinationCell.Column].setPiece(originalPieceTemp);
-            board[originalCell.Row][originalCell.Column].setPiece(destinationPieceTemp);
+            var checkPiecesCollection = GetAllOppositeAvailableSquares(originalPieceTemp.PieceColor, Board, forKing);
+            List<BoardCell> piecesCheckingSim = GetPiecesChecking(kingCell, checkPiecesCollection);
 
-            var oppositeAvailableSquaresCollection = GetAllOppositeAvailableSquares(kingCell.PIECE.PieceColor, board);
-            var piecesChecking = GetPiecesChecking(kingCell, oppositeAvailableSquaresCollection);
+            Board[originalCell.Row][originalCell.Column].setPiece(originalPieceTemp);
+            Board[destinationCell.Row][destinationCell.Column].setPiece(destinationPieceTemp);
+            return piecesCheckingSim;
 
-            board[destinationCell.Row][destinationCell.Column].setPiece(destinationPieceTemp);
-            board[originalCell.Row][originalCell.Column].setPiece(originalPieceTemp);
-
-            return piecesChecking;
-        }
-
-        public bool isValidCheckCell(BoardCell destination, BoardCell originalPiece, List<BoardCell> piecesChecking, BoardCell kingCell)
-        {
-            if (piecesChecking.Count == 1)
-            {
-                var piece = piecesChecking[0];
-
-                if (destination.Row == piece.Row && destination.Column == piece.Column)
-                {
-                    return true;
-                }
-
-                //var piecesCheckingSim = GetPiecesCheckingWithMutation(originalPiece, destination);
-
-                //if (piecesCheckingSim.Count == 0)
-                //{
-                //    return true;
-                //}
-
-                var Board = ChessViewModel.Instance.Board;
-                var originalPieceTemp = originalPiece.PIECE;
-                var destinationPieceTemp = destination.PIECE;
-                Board[destination.Row][destination.Column].setPiece(originalPieceTemp);
-                Board[originalPiece.Row][originalPiece.Column].setPiece(destinationPieceTemp);
-
-                var checkPiecesCollection = new AvailableSquareCollection();
-                var checkPieces = piece.PIECE.GetAvailableSquares(piece, piece, false);
-                checkPiecesCollection.SetOriginator(piece);
-                foreach (var checkPiece in checkPieces) { checkPiecesCollection.AddAvailableCell(checkPiece); }
-                ;
-
-                var piecesCheckingSim = GetPiecesChecking(kingCell, new List<AvailableSquareCollection> { checkPiecesCollection });
-
-                if (piecesCheckingSim.Count == 0)
-                {
-                    Board[originalPiece.Row][originalPiece.Column].setPiece(originalPieceTemp);
-                    Board[destination.Row][destination.Column].setPiece(destinationPieceTemp);
-                    return true;
-                }
-                else
-                {
-                    Board[originalPiece.Row][originalPiece.Column].setPiece(originalPieceTemp);
-                    Board[destination.Row][destination.Column].setPiece(destinationPieceTemp);
-                }
-
-            }
-            else
-            {
-                return false;
-            }
-
-            return false;
         }
 
         public List<BoardCell> GetPiecesChecking(BoardCell kingCell, List<AvailableSquareCollection> oppositeAvailableSquaresCollection)
