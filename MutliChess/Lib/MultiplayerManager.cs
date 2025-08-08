@@ -32,17 +32,17 @@ namespace MultiChess.Lib
 
         public void Connect()
         {
-            _socket = IO.Socket("http://localhost:4501");
+            //_socket = IO.Socket("http://localhost:4501");
 
-            _socket.On(Socket.EVENT_CONNECT, () =>
-            {
-                Console.WriteLine("hi");
-            });
+            //_socket.On(Socket.EVENT_CONNECT, () =>
+            //{
+            //    Console.WriteLine("hi");
+            //});
 
-            _socket.On(Socket.EVENT_CONNECT_ERROR, (error) =>
-            {
-                Console.WriteLine("Connection Error: " + error);
-            });
+            //_socket.On(Socket.EVENT_CONNECT_ERROR, (error) =>
+            //{
+            //    Console.WriteLine("Connection Error: " + error);
+            //});
 
         }
     }
