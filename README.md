@@ -5,4 +5,4 @@
 A chess GUI + Engine that is fully in C# with WPF
 
 ![Image One](./Images/MultiChess-1.png)
-![Image Twe](./Images/MultiChess-2.png)
+![Image Two](./Images/MultiChess-2.png)
